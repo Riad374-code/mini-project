@@ -28,7 +28,7 @@ os.environ['GROQ_API_KEY']=os.getenv('GROQ_API_KEY')
 st.title("Your best friend during exam sessions!")
 st.write("You can upload your PDFs' as you wish and get remarkable answers on your need")
 
-llm=ChatGroq(model='llama-3.1-8b-instant')
+llm=ChatOllama(model='llama3.1')
 embedding=OllamaEmbeddings(model='mxbai-embed-large')
 session_id=st.text_input("Session ID",value="Default ID")
 
@@ -48,14 +48,14 @@ if uploaded_files:
         documents.extend(docs)
     
     # Now we can divide into documents
-    text_spliter=RecursiveCharacterTextSplitter(chunk_size=700,chunk_overlap=70)
+    text_spliter=RecursiveCharacterTextSplitter(chunk_size=500,chunk_overlap=50)
     final_docs=text_spliter.split_documents(docs)
     db=FAISS.from_documents(final_docs,embedding)
-    retriever=db.as_retriever(search_type='similarity')
+    retriever=db.as_retriever()
 
     # Input needed prompts
     contextualize_system_prompt=(
-         "Given a chat history and the latest user question"
+            "Given a chat history and the latest user question"
             "which might reference context in the chat history, "
             "formulate a standalone question which can be understood "
             "without the chat history. Do NOT answer the question, "
@@ -106,8 +106,9 @@ if uploaded_files:
     conversational_rag_chain=RunnableWithMessageHistory(
         rag_chain,session_saver,
         input_messages_key='input',
-        output_messages_key='answer',
-        history_messages_key='chat_history'
+        history_messages_key='chat_history',
+        output_messages_key='answer'
+        
     )
 
     input=st.text_input("Ask what you want about given information:")
@@ -119,7 +120,7 @@ if uploaded_files:
                 "configurable": {"session_id":session_id}
             },
         )
-        st.write(st.session_state.store)
+        
         st.write("Assistant:", response['answer'])
         st.write("Chat History:",  session_history.messages)
 
