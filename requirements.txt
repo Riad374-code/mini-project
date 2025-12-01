@@ -7,3 +7,6 @@ langchain_groq
 langchain_ollama
 langchain
 streamlit
+dotenv
+os
+operator
